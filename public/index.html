@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BRAT Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+      * { font-family: Inter, system-ui, sans-serif; }
+      body { overflow-x: hidden; }
+      .blob { filter: blur(70px); animation: float 7s ease-in-out infinite; }
+      .blob:nth-child(2) { animation-delay: -3s; }
+      .card-in { animation: cardIn .8s cubic-bezier(.2,.8,.2,1) both; }
+      .fade-up { animation: fadeUp .75s cubic-bezier(.2,.8,.2,1) both; }
+      .float-img { animation: floatImg 4s ease-in-out infinite; }
+      .grid-bg {
+        background-image:
+          linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
+        background-size: 36px 36px;
+      }
+      input[type='range'] { accent-color: #8ace00; }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(24px) scale(.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @keyframes cardIn {
+        from { opacity: 0; transform: translateY(40px) rotateX(12deg); }
+        to { opacity: 1; transform: translateY(0) rotateX(0deg); }
+      }
+      @keyframes float {
+        0%,100% { transform: translate3d(0,0,0) scale(1); }
+        50% { transform: translate3d(30px,-30px,0) scale(1.08); }
+      }
+      @keyframes floatImg {
+        0%,100% { transform: translateY(0) rotate(-1deg); }
+        50% { transform: translateY(-12px) rotate(1deg); }
+      }
+      @keyframes shimmer {
+        0% { transform: translateX(-120%); }
+        100% { transform: translateX(120%); }
+      }
+      .shimmer::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent);
+        animation: shimmer 2.4s infinite;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-black text-white grid-bg">
+    <div class="pointer-events-none fixed inset-0 overflow-hidden">
+      <div class="blob absolute -left-24 top-10 h-72 w-72 rounded-full bg-lime-400/40"></div>
+      <div class="blob absolute -right-24 bottom-10 h-80 w-80 rounded-full bg-white/15"></div>
+    </div>
+
+    <main class="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-5 py-10">
+      <section class="grid w-full gap-8 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
+        <div class="fade-up space-y-7">
+          <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm text-white/80 backdrop-blur-xl">
+            <span class="h-2 w-2 animate-pulse rounded-full bg-lime-400"></span>
+            BRAT Canvas Generator
+          </div>
+
+          <div class="space-y-4">
+            <h1 class="text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
+              BRAT <span class="text-lime-400">Generator</span>
+            </h1>
+            <p class="max-w-xl text-base leading-8 text-white/65 sm:text-lg">
+              Generate gambar BRAT langsung dari backend Node.js. Result API langsung berupa gambar PNG, bukan JSON.
+            </p>
+          </div>
+
+          <div class="rounded-3xl border border-white/10 bg-white/[.07] p-4 backdrop-blur-xl">
+            <p class="mb-2 text-xs font-bold uppercase tracking-[.2em] text-white/45">Contoh Request URL</p>
+            <div class="flex gap-2 rounded-2xl bg-black/70 p-3">
+              <code id="requestUrl" class="flex-1 break-all text-sm text-lime-300">/api/brat?text=Brat%20Canvas%20%F0%9F%8E%A8&theme=white&blur=0</code>
+              <button id="copyBtn" class="shrink-0 rounded-xl bg-white px-4 py-2 text-xs font-bold text-black transition hover:scale-105 active:scale-95">COPY</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-in rounded-[2rem] border border-white/10 bg-white/[.08] p-4 shadow-2xl backdrop-blur-2xl sm:p-6">
+          <div class="grid gap-5 lg:grid-cols-[.9fr_1.1fr]">
+            <form id="bratForm" class="space-y-5 rounded-[1.5rem] border border-white/10 bg-black/50 p-5">
+              <div class="space-y-2">
+                <label class="text-sm font-bold text-white/80" for="text">Text</label>
+                <textarea id="text" maxlength="500" rows="5" class="w-full resize-none rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-lime-400 focus:ring-4 focus:ring-lime-400/10" placeholder="Tulis text brat kamu...">Brat Canvas 🎨</textarea>
+                <div class="flex justify-between text-xs text-white/40">
+                  <span>Max 500 karakter</span>
+                  <span id="count">13/500</span>
+                </div>
+              </div>
+
+              <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                <div class="space-y-2">
+                  <label class="text-sm font-bold text-white/80" for="theme">Warna BG</label>
+                  <select id="theme" class="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white outline-none transition focus:border-lime-400 focus:ring-4 focus:ring-lime-400/10">
+                    <option class="bg-black" value="white">White</option>
+                    <option class="bg-black" value="black">Black</option>
+                    <option class="bg-black" value="green">Green</option>
+                  </select>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <label class="text-sm font-bold text-white/80" for="blur">Blur</label>
+                    <span id="blurValue" class="rounded-full bg-lime-400 px-3 py-1 text-xs font-black text-black">0</span>
+                  </div>
+                  <input id="blur" type="range" min="0" max="3" step="1" value="0" class="w-full" />
+                </div>
+              </div>
+
+              <button id="generateBtn" type="submit" class="relative w-full overflow-hidden rounded-2xl bg-lime-400 px-5 py-4 font-black text-black transition hover:scale-[1.02] active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60 shimmer">
+                Generate BRAT
+              </button>
+            </form>
+
+            <div class="space-y-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-black">Preview</p>
+                  <p class="text-xs text-white/45">Auto refresh setelah generate</p>
+                </div>
+                <a id="openImage" href="/api/brat?text=Brat%20Canvas%20%F0%9F%8E%A8&theme=white&blur=0" target="_blank" class="rounded-full border border-white/10 px-4 py-2 text-xs font-bold text-white/70 transition hover:border-lime-400 hover:text-lime-300">OPEN</a>
+              </div>
+
+              <div class="float-img overflow-hidden rounded-[1.4rem] border border-white/10 bg-black/40 p-3">
+                <img id="preview" src="/api/brat?text=Brat%20Canvas%20%F0%9F%8E%A8&theme=white&blur=0" alt="BRAT Preview" class="aspect-square w-full rounded-2xl object-cover shadow-2xl transition duration-500" />
+              </div>
+
+              <a id="downloadBtn" href="/api/brat?text=Brat%20Canvas%20%F0%9F%8E%A8&theme=white&blur=0" download="brat.png" class="block rounded-2xl border border-white/10 bg-white/10 px-5 py-4 text-center text-sm font-black transition hover:border-lime-400 hover:bg-lime-400 hover:text-black">
+                Download PNG
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/script.js"></script>
+  </body>
+</html>
