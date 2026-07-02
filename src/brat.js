@@ -1,12 +1,14 @@
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas')
 const { writeFileSync, existsSync, readFileSync, mkdirSync } = require('fs')
 const path = require('path')
+const os = require('os')
 
 const FONT_URL = 'https://raw.githubusercontent.com/Ditzzx-vibecoder/Assets/main/Font/ARIALN.ttf'
 const EMOJI_JSON_URL = 'https://media.githubusercontent.com/media/Ditzzx-vibecoder/entahlah/main/emoji-apple.json'
-const ASSETS_DIR = path.join(__dirname, '..', 'assets')
-const FONT_PATH = path.join(ASSETS_DIR, 'ARIALN.ttf')
-const EMOJI_JSON_PATH = path.join(ASSETS_DIR, 'emoji-apple.json')
+
+let assetsReady = false
+let fontPath = ''
+let emojiJsonPath = ''
 
 const THEMES = {
   black: { bg: '#000000', text: '#ffffff' },
@@ -14,18 +16,38 @@ const THEMES = {
   green: { bg: '#8ace00', text: '#000000' }
 }
 
-async function downloadFile(url, dest) {
+async function download(url, dest) {
+  if (existsSync(dest)) return
+
   const res = await fetch(url)
-  if (!res.ok) throw new Error(`Gagal download asset: ${url}`)
-  const buf = Buffer.from(await res.arrayBuffer())
-  writeFileSync(dest, buf)
-  return buf
+
+  if (!res.ok) {
+    throw new Error(`Failed download: ${url}`)
+  }
+
+  const buffer = Buffer.from(await res.arrayBuffer())
+
+  writeFileSync(dest, buffer)
 }
 
-async function ensureFont() {
-  if (!existsSync(ASSETS_DIR)) mkdirSync(ASSETS_DIR, { recursive: true })
-  if (!existsSync(FONT_PATH)) await downloadFile(FONT_URL, FONT_PATH)
-  GlobalFonts.registerFromPath(FONT_PATH, 'ArialNarrow')
+async function prepareAssets() {
+  if (assetsReady) return
+
+  const dir = path.join(os.tmpdir(), 'brat-generator-assets')
+
+  mkdirSync(dir, {
+    recursive: true
+  })
+
+  fontPath = path.join(dir, 'ARIALN.ttf')
+  emojiJsonPath = path.join(dir, 'emoji-apple.json')
+
+  await download(FONT_URL, fontPath)
+  await download(EMOJI_JSON_URL, emojiJsonPath)
+
+  GlobalFonts.registerFromPath(fontPath, 'ArialNarrow')
+
+  assetsReady = true
 }
 
 let emojiMap = null
@@ -37,9 +59,10 @@ function emojiToUnicode(emoji) {
 
 async function loadEmojiMap() {
   if (emojiMap) return emojiMap
-  if (!existsSync(ASSETS_DIR)) mkdirSync(ASSETS_DIR, { recursive: true })
-  if (!existsSync(EMOJI_JSON_PATH)) await downloadFile(EMOJI_JSON_URL, EMOJI_JSON_PATH)
-  emojiMap = JSON.parse(readFileSync(EMOJI_JSON_PATH, 'utf-8'))
+
+  await prepareAssets()
+
+  emojiMap = JSON.parse(readFileSync(emojiJsonPath, 'utf-8'))
   return emojiMap
 }
 
@@ -175,7 +198,7 @@ async function generateBratBuffer({ text = 'Halo Guys Nama Saya', theme = 'white
   const maxWidth = size - padding * 2
   const maxHeight = size - padding * 2
 
-  await ensureFont()
+  await prepareAssets()
   await loadEmojiMap()
 
   const canvas = createCanvas(size, size)
