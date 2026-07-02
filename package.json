@@ -1,0 +1,26 @@
+{
+  "name": "brat-generator",
+  "version": "1.0.0",
+  "description": "BRAT Generator Frontend + Backend using HTML, Tailwind CSS, JavaScript, Node.js",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "brat",
+    "generator",
+    "canvas",
+    "express"
+  ],
+  "author": "Marcellino F.A",
+  "license": "MIT",
+  "dependencies": {
+    "@napi-rs/canvas": "0.1.78",
+    "express": "4.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "3.1.4"
+  }
+}
